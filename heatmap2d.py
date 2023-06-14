@@ -91,17 +91,6 @@ def get_rgb_ndarr(arr: torch.Tensor) -> np.ndarray:
 
     return frame
 
-def val_to_rgb(val: float) -> tuple[int]:
-    """
-    maps 0-1 -> rgb255 linearly
-    """
-    # desmos eq: \frac{\ln\left(\sqrt{x}+1\right)}{1.1}
-    # scaled_val = math.log(math.sqrt(val) + 1) / 1.1
-    scaled_val = -0.693*val+0.693
-    
-    _unscaled = colorsys.hsv_to_rgb(scaled_val, 1, 1)
-    return tuple(int(val * 255) for val in _unscaled)
-
 
 time_counter = 0
 #print()
