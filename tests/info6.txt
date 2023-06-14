@@ -1,0 +1,14 @@
+Log File: <_io.TextIOWrapper name='tests/log6.csv' mode='w+' encoding='cp1252'>
+Directory: tests/
+Length: 10
+Width: 10
+..............................
+Date: 2023-06-14 09:46:16.931534
+Time: 1686757576.9315348
+..............................
+GPU: False
+CPU: True
+GPU Name: 
+Device Name: LAPTOP-VE772HQM
+GPU Memory: 0
+Memory: 0

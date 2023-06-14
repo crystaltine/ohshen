@@ -4,6 +4,23 @@ import os
 import sys
 import datetime
 import torch
+from timing import Timer
+
+#Creates a file name string for the log file   
+class IterativeFile:
+    m_FileName = ""
+    def __init__(self, directory, basename, extension):
+        #check if the directory exists, if not, create it
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        file_iterator = 0
+        while(os.path.exists(directory + basename + str(file_iterator) + extension)):
+            file_iterator += 1
+        self.m_FileName = directory + basename + str(file_iterator) + extension
+        
+    def getFileName(self):
+        return self.m_FileName
 
 class Log:
     m_GPU = False
@@ -18,7 +35,7 @@ class Log:
     m_logFile_Name = ""
     m_infoFile_Name = ""
 
-    def __init__(self, directory, length: int, width: int):
+    def __init__(self, directory, length: int, width: int, gif_hex: str):
         #Log hardware
         if torch.cuda.is_available():
             self.m_GPU = True
@@ -29,13 +46,19 @@ class Log:
             self.m_Device_Name = os.environ['COMPUTERNAME']
         
         ##Create log file
-        self.m_logFile_Name = self.createIterativeFile(directory, "log", ".csv")
-        self.m_logFile_Name.write("Time/Iteration, TempCalcIterTime(ns), ColorCalcIterTime(ns), TempCalcIterBest(ns), ColorCalcIterBest(ns), TempCalcIterWorst(ns), ColorCalcIterWorst(ns), TempCalcIterAvg(ns), ColorCalcIterAvg(ns)\n")
+        LogFS = IterativeFile(directory, "log", ".csv")
+
+        self.m_logFile_Name = open(LogFS.getFileName(), "w+")
+        self.m_logFile_Name.write("Time/Iteration, TempCalcIterTime(us), ColorCalcIterTime(us), TempCalcIterBest(us), ColorCalcIterBest(us), TempCalcIterWorst(us), ColorCalcIterWorst(us), TempCalcIterAvg(us), ColorCalcIterAvg(us)\n")
         self.m_logFile_Name.close()
         
         ##Create info file
-        self.m_infoFile_Name = self.createIterativeFile(directory, "info", ".txt")
+        InfoFS = IterativeFile(directory, "info", ".txt")
+
+        self.m_infoFile_Name = open(InfoFS.getFileName(), "w+")
         self.m_infoFile_Name.write("Log File: " + str(self.m_logFile_Name) + "\n")
+        
+        self.m_infoFile_Name.write("Gif File: " + str(gif_hex) + "\n")
         self.m_infoFile_Name.write("Directory: " + str(directory) + "\n")
         self.m_infoFile_Name.write("Length: " + str(length) + "\n")
         self.m_infoFile_Name.write("Width: " + str(width) + "\n")
@@ -57,14 +80,33 @@ class Log:
         self.m_infoFile_Name.write("Memory: " + str(self.m_Memory) + "\n")
         self.m_infoFile_Name.close()
 
-        
+        self.m_logFile_Name = open(self.m_logFile_Name.name, "a+") #Reopen log file in append mode. Ready for logging
+
         return
-    
-    def createIterativeFile(self, directory, basename, extension):
-        file_iterator = 0
-        while(os.path.exists(directory + basename + str(file_iterator) + extension)):
-            file_iterator += 1
-        return open(directory + basename + str(file_iterator) + extension, "w+")
+
+
+    def log(self, AvgTimer, ColorTimer, iteration):
+        #Open log file
+        #Write to log file
+        
+        self.m_logFile_Name.write(str(iteration) + ",")
+        self.m_logFile_Name.write(str(AvgTimer.m_Time) + ",")
+        self.m_logFile_Name.write(str(ColorTimer.m_Time) + ",")
+        self.m_logFile_Name.write(str(AvgTimer.m_BestTime) + ",")
+        self.m_logFile_Name.write(str(ColorTimer.m_BestTime) + ",")
+        self.m_logFile_Name.write(str(AvgTimer.m_WorstTime) + ",")
+        self.m_logFile_Name.write(str(ColorTimer.m_WorstTime) + ",")
+        self.m_logFile_Name.write(str(AvgTimer.m_AverageTime) + ",")
+        self.m_logFile_Name.write(str(ColorTimer.m_AverageTime) + "\n")
+        
+
+        #NEW: write to log file without converting to a string
+
+
+
+
+
+
 
 
         

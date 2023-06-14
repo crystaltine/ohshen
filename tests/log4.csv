@@ -1,0 +1,3 @@
+Time/Iteration, TempCalcIterTime(ns), ColorCalcIterTime(ns), TempCalcIterBest(ns), ColorCalcIterBest(ns), TempCalcIterWorst(ns), ColorCalcIterWorst(ns), TempCalcIterAvg(ns), ColorCalcIterAvg(ns)
+1,852600,0,852600,0,852600,0,426300.0,0
+2,284000,0,284000,0,852600,0,355150.0,0

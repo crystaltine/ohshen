@@ -1,0 +1,15 @@
+Log File: <_io.TextIOWrapper name='logs/log30.csv' mode='w+' encoding='cp1252'>
+Gif File: f85c3865-2d.gif
+Directory: logs/
+Length: 10
+Width: 10
+..............................
+Date: 2023-06-14 10:21:12.204917
+Time: 1686759672.2049177
+..............................
+GPU: False
+CPU: True
+GPU Name: 
+Device Name: LAPTOP-VE772HQM
+GPU Memory: 0
+Memory: 0
