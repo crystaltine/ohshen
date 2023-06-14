@@ -9,9 +9,10 @@ from log import IterativeFile
 from GIFmake import draw_gif
 from timing import Timer
 import uuid
-import numpy
+import numpy as np
 from PIL import Image
 from debug_progress_bar import _get_progress_string
+import matplotlib.colors as colors
 
 if torch.cuda.is_available():
     print("CUDA is available, using GPU")
@@ -19,8 +20,9 @@ else:
     print("CUDA is not available, using CPU")
 
 #constants
-LENGTH = 10
-WIDTH = 10
+LENGTH = 100
+WIDTH = 100
+RADIUS = 5
 
 gifFS = IterativeFile("images/2d/", "2D", ".gif")
 
@@ -34,7 +36,10 @@ PERF_color_calc_timer = Timer()
 
 # convert to 1d tensor
 heatmap_random = ConductiveSurface(LENGTH, WIDTH, 0)
-heatmap_random.heat_square((5, 5), 3, 1)
+heatmap_random.heat_square((50, 50), RADIUS, 1)
+heatmap_random.heat_square((20, 50), RADIUS, 0.2)
+heatmap_random.heat_square((30, 80), RADIUS, 1)
+heatmap_random.heat_square((90, 90), RADIUS, 0.5)
 
 heatmap_random = heatmap_random.get_iterable()
 
@@ -74,19 +79,15 @@ def runtimestep(heatmap: torch.Tensor, time_counter):
 def get_color_escape(r, g, b, background=False):
     return '\033[{};2;{};{};{}m'.format(48 if background else 38, r, g, b)
 
-def get_rgb_ndarr(arr: torch.Tensor) -> numpy.ndarray:
-    if torch.cuda.is_available():
-        arr = arr.to(torch.device("gpu"))  # Move tensor to GPU
-    else:
-        arr = arr.to(torch.device("cpu"))  # Move tensor to CPU
-    
-    # nxm tensor with 3 color channels (0 -> 255)
-    
-    # TODO: can be optimized
-    
-    frame = numpy.zeros((arr.shape[0], arr.shape[1], 3), dtype=numpy.uint8)
-    for row in range(len(arr)):
-        frame[row] = [val_to_rgb(val) for val in arr[row]]
+def get_rgb_ndarr(arr: torch.Tensor) -> np.ndarray:
+    device = arr.device
+
+    scaled_vals = -0.693 * arr + 0.693
+    hsv_tensor = torch.stack([scaled_vals, torch.ones_like(arr), torch.ones_like(arr)], dim=-1)
+    hsv_array = hsv_tensor.cpu().numpy()
+
+    rgb_array = colors.hsv_to_rgb(hsv_array) * 255
+    frame = np.round(rgb_array).astype(np.uint8)
 
     return frame
 
@@ -131,6 +132,10 @@ for i in range(NUM_ITERATIONS):
 
 print(f"\n\nBest Averaging Time: {PERF_average_calc_timer.m_BestTime} us")
 print(f"Worst Averaging Time: {PERF_average_calc_timer.m_WorstTime} us")
-print(f"Average Averaging Time: {PERF_average_calc_timer.m_AverageTime} us")
+print(f"Average Averaging Time: {round(PERF_average_calc_timer.m_AverageTime, 2)} us")
+
+print(f"\nBest Color Time: {PERF_color_calc_timer.m_BestTime} us")
+print(f"Worst Color Time: {PERF_color_calc_timer.m_WorstTime} us")
+print(f"Average Color Time: {round(PERF_color_calc_timer.m_AverageTime, 2)} us")
 
 draw_gif(frames, gif_path, FPS)

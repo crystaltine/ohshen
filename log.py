@@ -26,7 +26,7 @@ class Log:
     m_GPU = False
     m_CPU = False
     m_GPU_Name = ""
-    m_CPU_Name = ""
+    m_Device_Name = ""
     m_GPU_Memory = 0
     m_Memory = 0
     m_Date = datetime.datetime.now()
