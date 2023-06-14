@@ -35,7 +35,7 @@ class Log:
     m_logFile_Name = ""
     m_infoFile_Name = ""
 
-    def __init__(self, directory, length: int, width: int, gif_hex: str):
+    def __init__(self, directory, length: int, width: int, num_iterations: int, fps: int, gif_hex: str):
         #Log hardware
         if torch.cuda.is_available():
             self.m_GPU = True
@@ -60,8 +60,13 @@ class Log:
         
         self.m_infoFile_Name.write("Gif File: " + str(gif_hex) + "\n")
         self.m_infoFile_Name.write("Directory: " + str(directory) + "\n")
+
+        for i in range(0, 30):
+            self.m_infoFile_Name.write(".")
         self.m_infoFile_Name.write("Length: " + str(length) + "\n")
         self.m_infoFile_Name.write("Width: " + str(width) + "\n")
+        self.m_infoFile_Name.write("Iterations: " + str(num_iterations) + "\n")
+        self.m_infoFile_Name.write("FPS: " + str(fps) + "\n")
         
         for i in range(0, 30):
             self.m_infoFile_Name.write(".")

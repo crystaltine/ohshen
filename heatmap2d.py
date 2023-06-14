@@ -21,6 +21,9 @@ else:
     print("CUDA is not available, using CPU")
     device = torch.device("cpu")
 
+NUM_ITERATIONS = int(input("Iteration count: "))
+FPS = int(input("FPS: "))
+
 #constants
 LENGTH = 100
 WIDTH = 100
@@ -31,7 +34,7 @@ gifFS = IterativeFile("images/2d/", "2D", ".gif")
 gif_path = gifFS.getFileName()
 
 #Set up log
-logger = Log("logs/", LENGTH, WIDTH, gif_path)
+logger = Log("logs/", LENGTH, WIDTH, NUM_ITERATIONS, FPS, gif_path)
 #Create average function Timer instance
 PERF_average_calc_timer = Timer()
 PERF_color_calc_timer = Timer()
@@ -81,10 +84,6 @@ def runtimestep(heatmap: torch.Tensor, time_counter):
     return avg
 
 
-
-def get_color_escape(r, g, b, background=False):
-    return '\033[{};2;{};{};{}m'.format(48 if background else 38, r, g, b)
-
 def get_rgb_ndarr(arr: torch.Tensor) -> np.ndarray:
     scaled_vals = -0.693 * arr + 0.693
     hsv_tensor = torch.stack([scaled_vals, torch.ones_like(arr), torch.ones_like(arr)], dim=-1)
@@ -105,8 +104,6 @@ time_counter = 0
 frames = []
 frames.append(Image.fromarray(get_rgb_ndarr(heatmap_random), 'RGB'))
 
-NUM_ITERATIONS = int(input("Iteration count: "))
-FPS = int(input("FPS: "))
 for i in range(NUM_ITERATIONS):
     time_counter += 1
 
