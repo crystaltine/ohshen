@@ -18,7 +18,7 @@ LENGTH = 10
 WIDTH = 10
 
 #Set up log
-Log("tests", LENGTH, WIDTH)
+Log("tests/", LENGTH, WIDTH)
 
 # convert to 1d tensor
 heatmap_random = ConductiveSurface(LENGTH, WIDTH, 0)
