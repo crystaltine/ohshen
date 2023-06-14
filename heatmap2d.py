@@ -96,10 +96,6 @@ def get_rgb_ndarr(arr: torch.Tensor) -> np.ndarray:
 
 
 time_counter = 0
-#print()
-#print_str_representation(heatmap_random, time_counter)
-#print(f"\n\033[0mTime: {time_counter}; Hottest: {round(heatmap_random.max().item(), 3)}; Coolest: {round(heatmap_random.min().item(), 3)}")
-#print("\n\n")
 
 frames = []
 frames.append(Image.fromarray(get_rgb_ndarr(heatmap_random), 'RGB'))

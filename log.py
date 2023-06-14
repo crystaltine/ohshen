@@ -1,122 +1,66 @@
-##Logging library to record performance of the program
-import time
 import os
-import sys
 import datetime
+import time
 import torch
-from timing import Timer
 
-#Creates a file name string for the log file   
 class IterativeFile:
-    m_FileName = ""
     def __init__(self, directory, basename, extension):
-        #check if the directory exists, if not, create it
         if not os.path.exists(directory):
             os.makedirs(directory)
 
         file_iterator = 0
-        while(os.path.exists(directory + basename + str(file_iterator) + extension)):
+        while os.path.exists(os.path.join(directory, f"{basename}{file_iterator}{extension}")):
             file_iterator += 1
-        self.m_FileName = directory + basename + str(file_iterator) + extension
-        
+
+        self.m_FileName = os.path.join(directory, f"{basename}{file_iterator}{extension}")
+
     def getFileName(self):
         return self.m_FileName
 
-class Log:
-    m_GPU = False
-    m_CPU = False
-    m_GPU_Name = ""
-    m_Device_Name = ""
-    m_GPU_Memory = 0
-    m_Memory = 0
-    m_Date = datetime.datetime.now()
-    m_Time = time.time()
 
-    m_logFile_Name = ""
-    m_infoFile_Name = ""
+class Log:
+    LOG_FILE_HEADER = "Time/Iteration, TempCalcIterTime(us), ColorCalcIterTime(us), TempCalcIterBest(us), " \
+                      "ColorCalcIterBest(us), TempCalcIterWorst(us), ColorCalcIterWorst(us), TempCalcIterAvg(us), " \
+                      "ColorCalcIterAvg(us)\n"
 
     def __init__(self, directory, length: int, width: int, num_iterations: int, fps: int, gif_hex: str):
-        #Log hardware
-        if torch.cuda.is_available():
-            self.m_GPU = True
-            self.m_GPU_Name = torch.cuda.get_device_name(0)
-            self.m_GPU_Memory = torch.cuda.get_device_properties(0).total_memory
-        else:
-            self.m_CPU = True
-            self.m_Device_Name = os.environ['COMPUTERNAME']
-        
-        ##Create log file
-        LogFS = IterativeFile(directory, "log", ".csv")
+        self.m_GPU = torch.cuda.is_available()
+        self.m_CPU = not self.m_GPU
+        self.m_GPU_Name = torch.cuda.get_device_name(0) if self.m_GPU else ""
+        self.m_Device_Name = os.environ.get('COMPUTERNAME', "") if self.m_CPU else ""
+        self.m_GPU_Memory = torch.cuda.get_device_properties(0).total_memory if self.m_GPU else 0
 
-        self.m_logFile_Name = open(LogFS.getFileName(), "w+")
-        self.m_logFile_Name.write("Time/Iteration, TempCalcIterTime(us), ColorCalcIterTime(us), TempCalcIterBest(us), ColorCalcIterBest(us), TempCalcIterWorst(us), ColorCalcIterWorst(us), TempCalcIterAvg(us), ColorCalcIterAvg(us)\n")
-        self.m_logFile_Name.close()
-        
-        ##Create info file
-        InfoFS = IterativeFile(directory, "info", ".txt")
+        log_fs = IterativeFile(directory, "log", ".csv")
+        self.m_logFile_Name = open(log_fs.getFileName(), "w+", buffering=8192)
+        self.m_logFile_Name.write(self.LOG_FILE_HEADER)
 
-        self.m_infoFile_Name = open(InfoFS.getFileName(), "w+")
-        self.m_infoFile_Name.write("Log File: " + str(self.m_logFile_Name) + "\n")
-        
-        self.m_infoFile_Name.write("Gif File: " + str(gif_hex) + "\n")
-        self.m_infoFile_Name.write("Directory: " + str(directory) + "\n")
-
-        for i in range(0, 30):
-            self.m_infoFile_Name.write(".")
-        self.m_infoFile_Name.write("Length: " + str(length) + "\n")
-        self.m_infoFile_Name.write("Width: " + str(width) + "\n")
-        self.m_infoFile_Name.write("Iterations: " + str(num_iterations) + "\n")
-        self.m_infoFile_Name.write("FPS: " + str(fps) + "\n")
-        
-        for i in range(0, 30):
-            self.m_infoFile_Name.write(".")
-        self.m_infoFile_Name.write("\n")
-        self.m_infoFile_Name.write("Date: " + str(self.m_Date) + "\n")
-        self.m_infoFile_Name.write("Time: " + str(self.m_Time) + "\n")
-
-        for i in range(0, 30):
-            self.m_infoFile_Name.write(".")
-        self.m_infoFile_Name.write("\n")
-        self.m_infoFile_Name.write("GPU: " + str(self.m_GPU) + "\n")
-        self.m_infoFile_Name.write("CPU: " + str(self.m_CPU) + "\n")
-        self.m_infoFile_Name.write("GPU Name: " + str(self.m_GPU_Name) + "\n")
-        self.m_infoFile_Name.write("Device Name: " + str(self.m_Device_Name) + "\n")
-        self.m_infoFile_Name.write("GPU Memory: " + str(self.m_GPU_Memory) + "\n")
-        self.m_infoFile_Name.write("Memory: " + str(self.m_Memory) + "\n")
-        self.m_infoFile_Name.close()
-
-        self.m_logFile_Name = open(self.m_logFile_Name.name, "a+") #Reopen log file in append mode. Ready for logging
-
-        return
-
+        info_fs = IterativeFile(directory, "info", ".txt")
+        with open(info_fs.getFileName(), "w+") as info_file:
+            info_file.write(f"Log File: {log_fs.getFileName()}\n")
+            info_file.write(f"Gif File: {gif_hex}\n")
+            info_file.write(f"Directory: {directory}\n")
+            info_file.write("." * 30 + f"Length: {length}\n")
+            info_file.write(f"Width: {width}\n")
+            info_file.write(f"Iterations: {num_iterations}\n")
+            info_file.write(f"FPS: {fps}\n")
+            info_file.write("." * 30 + "\n")
+            info_file.write(f"Date: {datetime.datetime.now()}\n")
+            info_file.write(f"GPU: {self.m_GPU}\n")
+            info_file.write(f"CPU: {self.m_CPU}\n")
+            info_file.write(f"GPU Name: {self.m_GPU_Name}\n")
+            info_file.write(f"Device Name: {self.m_Device_Name}\n")
+            info_file.write(f"GPU Memory: {self.m_GPU_Memory}\n")
 
     def log(self, AvgTimer, ColorTimer, iteration):
-        #Open log file
-        #Write to log file
-        
-        self.m_logFile_Name.write(str(iteration) + ",")
-        self.m_logFile_Name.write(str(AvgTimer.m_Time) + ",")
-        self.m_logFile_Name.write(str(ColorTimer.m_Time) + ",")
-        self.m_logFile_Name.write(str(AvgTimer.m_BestTime) + ",")
-        self.m_logFile_Name.write(str(ColorTimer.m_BestTime) + ",")
-        self.m_logFile_Name.write(str(AvgTimer.m_WorstTime) + ",")
-        self.m_logFile_Name.write(str(ColorTimer.m_WorstTime) + ",")
-        self.m_logFile_Name.write(str(AvgTimer.m_AverageTime) + ",")
-        self.m_logFile_Name.write(str(ColorTimer.m_AverageTime) + "\n")
-        
-
-        #NEW: write to log file without converting to a string
-
-
-
-
-
-
-
-
-        
-        
-
-        
-
-
+        data = [
+            iteration,
+            f"{AvgTimer.m_Time:.3f}",
+            f"{ColorTimer.m_Time:.3f}",
+            f"{AvgTimer.m_BestTime:.3f}",
+            f"{ColorTimer.m_BestTime:.3f}",
+            f"{AvgTimer.m_WorstTime:.3f}",
+            f"{ColorTimer.m_WorstTime:.3f}",
+            f"{AvgTimer.m_AverageTime:.3f}",
+            f"{ColorTimer.m_AverageTime:.3f}"
+        ]
+        self.m_logFile_Name.write(",".join(map(str, data)) + "\n")
